@@ -19,6 +19,10 @@ export const metadata: Metadata = {
     description: 'A live activation series built around action, clarity, and collective growth. March 20, 2026 — The Gathering Spot, Los Angeles.',
     images: ['/og-image.png'],
   },
+  icons: {
+    icon: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
 }
 
 const TICKETS_URL = 'https://www.eventbrite.com/e/the-ujamaa-expo-mingle-plei-tickets-1984949722052?aff=oddtdtcreator'
