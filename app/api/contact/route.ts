@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 const FMBH_API = 'https://api.funkmedia.io'
-const TENANT_ID = 'ujamaaexpo'
-const FORM_SLUG = 'system-contact'
 
 export async function POST(req: NextRequest) {
   const body = await req.json()
@@ -13,16 +11,19 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const res = await fetch(`${FMBH_API}/forms/${FORM_SLUG}/submit`, {
+    const res = await fetch(`${FMBH_API}/forms/system-contact/submit`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Tenant-Id': TENANT_ID,
+        'X-Tenant-Id': 'ujamaaexpo',
+        'X-Network-Id': '9',
       },
       body: JSON.stringify({
-        name: name.trim(),
-        email: email.trim(),
-        message: message.trim(),
+        submission_data: {
+          name: name.trim(),
+          email: email.trim(),
+          message: message.trim(),
+        },
       }),
     })
 
