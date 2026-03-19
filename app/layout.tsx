@@ -4,7 +4,21 @@ import Image from 'next/image'
 
 export const metadata: Metadata = {
   title: 'The Ujamaa Expo | March 20, 2026 - Los Angeles',
-  description: 'Short activations. Real work. Open exchange.',
+  description: 'A live activation series built around action, clarity, and collective growth. March 20, 2026 — The Gathering Spot, Los Angeles.',
+  openGraph: {
+    title: 'The Ujamaa Expo',
+    description: 'A live activation series built around action, clarity, and collective growth. March 20, 2026 — The Gathering Spot, Los Angeles.',
+    url: 'https://ujamaaexpo.com',
+    siteName: 'The Ujamaa Expo',
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'The Ujamaa Expo',
+    description: 'A live activation series built around action, clarity, and collective growth. March 20, 2026 — The Gathering Spot, Los Angeles.',
+    images: ['/og-image.png'],
+  },
 }
 
 const TICKETS_URL = 'https://www.eventbrite.com/e/the-ujamaa-expo-mingle-plei-tickets-1984949722052?aff=oddtdtcreator'
