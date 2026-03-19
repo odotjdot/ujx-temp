@@ -53,6 +53,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Figtree:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+        <script src="https://www.google.com/recaptcha/api.js?render=6LecXY8sAAAAANqi4AO2T2f5wb2ltOpU-KgTwPXZ" async defer></script>
         {/* SECURITY: Theme CSS compiled by wp_get_global_stylesheet() on our WP server — CSS only, no user content */}
         <style id="wp-global-styles">{themeCSS}</style>
       </head>

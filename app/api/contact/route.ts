@@ -3,15 +3,30 @@ import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
 
 const TO_EMAIL = 'info@ujamaaexpo.com'
 const FROM_EMAIL = 'oj.smith@funkmedia.net'
+const RECAPTCHA_SECRET = '6LecXY8sAAAAADcS0nrQ1Zod1yAEh1HvPe5DX8J3'
 
 const ses = new SESClient({ region: 'us-west-1' })
 
 export async function POST(req: NextRequest) {
   const body = await req.json()
-  const { name, email, message } = body
+  const { name, email, message, recaptchaToken } = body
 
   if (!name?.trim() || !email?.trim() || !message?.trim()) {
     return NextResponse.json({ error: 'All fields are required' }, { status: 400 })
+  }
+
+  // Verify reCAPTCHA
+  if (recaptchaToken) {
+    const verifyRes = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `secret=${RECAPTCHA_SECRET}&response=${recaptchaToken}`,
+    })
+    const verify = await verifyRes.json()
+    if (!verify.success || verify.score < 0.3) {
+      // Score too low — likely bot
+      return NextResponse.json({ success: true }) // fake success
+    }
   }
 
   try {
