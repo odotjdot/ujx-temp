@@ -81,7 +81,7 @@ export default async function HomePage() {
         {blocks.map((block: any) => {
           const html = block?.renderedHtml || ''
           if (!html) return null
-          return <div key={block.clientId}>{parse(html)}</div>
+          return parse(html)
         })}
       </div>
     </>

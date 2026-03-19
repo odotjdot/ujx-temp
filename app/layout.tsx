@@ -13,7 +13,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
-        <link rel="preconnect" href="https://hq.funkmedia.net" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Figtree:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </head>
       <body className="relative">
         <header className="sticky top-0 z-50 bg-black/90 backdrop-blur-sm border-b border-white/10">
