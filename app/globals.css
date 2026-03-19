@@ -2,3 +2,22 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Root padding — WordPress sets these from theme.json but the theme doesn't define them.
+   These control padding on alignfull blocks so content doesn't hit screen edges. */
+:root {
+  --wp--style--root--padding-left: 1.5rem;
+  --wp--style--root--padding-right: 1.5rem;
+  --wp--style--root--padding-top: 0;
+  --wp--style--root--padding-bottom: 0;
+  --wp--custom--gap--horizontal: 1.5rem;
+  --wp--custom--gap--vertical: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --wp--style--root--padding-left: 2.5rem;
+    --wp--style--root--padding-right: 2.5rem;
+    --wp--custom--gap--horizontal: 2.5rem;
+  }
+}
