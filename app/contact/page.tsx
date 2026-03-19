@@ -44,6 +44,8 @@ export default function ContactPage() {
     if (res.ok) {
       setStatus('sent')
       form.reset()
+      // Push to GTM dataLayer for conversion tracking
+      ;(window as any).dataLayer?.push({ event: 'form_submit', form_name: 'contact' })
     } else {
       const err = await res.json()
       setErrorMsg(err.error || 'Something went wrong')
