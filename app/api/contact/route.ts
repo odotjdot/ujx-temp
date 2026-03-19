@@ -3,7 +3,7 @@ import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
 
 const TO_EMAIL = 'info@ujamaaexpo.com'
 const FROM_EMAIL = 'oj.smith@funkmedia.net'
-const RECAPTCHA_SECRET = '6LecXY8sAAAAADcS0nrQ1Zod1yAEh1HvPe5DX8J3'
+const RECAPTCHA_SECRET = process.env.RECAPTCHA_SECRET_KEY || ''
 
 // No explicit credentials — uses IAM role on Amplify, ~/.aws/credentials locally
 const ses = new SESClient({ region: 'us-west-1' })
