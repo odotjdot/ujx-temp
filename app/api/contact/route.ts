@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
       headers: {
         'Content-Type': 'application/json',
         'X-Tenant-Id': 'ujamaaexpo',
-        'X-Network-Id': '9',
+        'X-Network-Id': '1',
       },
       body: JSON.stringify({
         submission_data: {
