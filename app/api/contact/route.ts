@@ -5,7 +5,15 @@ const TO_EMAIL = 'info@ujamaaexpo.com'
 const FROM_EMAIL = 'oj.smith@funkmedia.net'
 const RECAPTCHA_SECRET = '6LecXY8sAAAAADcS0nrQ1Zod1yAEh1HvPe5DX8J3'
 
-const ses = new SESClient({ region: 'us-west-1' })
+const ses = new SESClient({
+  region: 'us-west-1',
+  ...(process.env.FM_ACCESS_KEY_ID && {
+    credentials: {
+      accessKeyId: process.env.FM_ACCESS_KEY_ID,
+      secretAccessKey: process.env.FM_SECRET_ACCESS_KEY || '',
+    },
+  }),
+})
 
 export async function POST(req: NextRequest) {
   const body = await req.json()
