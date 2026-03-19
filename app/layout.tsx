@@ -1,4 +1,5 @@
 import './globals.css'
+import './wp-blocks.css'
 import type { Metadata } from 'next'
 import Image from 'next/image'
 
@@ -27,7 +28,23 @@ export const metadata: Metadata = {
 
 const TICKETS_URL = 'https://www.eventbrite.com/e/the-ujamaa-expo-mingle-plei-tickets-1984949722052?aff=oddtdtcreator'
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+async function getThemeCSS() {
+  const res = await fetch(
+    'https://hq.funkmedia.net/ujamaaexpo/wp-json/fm-styles/v1/theme.css',
+    { next: { revalidate: 3600 } }
+  )
+  const raw = await res.text()
+  try {
+    const parsed = JSON.parse(raw)
+    return typeof parsed === 'string' ? parsed : raw
+  } catch {
+    return raw
+  }
+}
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const themeCSS = await getThemeCSS()
+
   return (
     <html lang="en">
       <head>
@@ -36,6 +53,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Figtree:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+        {/* SECURITY: Theme CSS compiled by wp_get_global_stylesheet() on our WP server — CSS only, no user content */}
+        <style id="wp-global-styles">{themeCSS}</style>
       </head>
       <body className="relative">
         <header className="sticky top-0 z-50 bg-black/90 backdrop-blur-sm border-b border-white/10">
@@ -51,7 +70,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 href={TICKETS_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-white text-black px-5 py-2 rounded-full text-sm font-semibold hover:bg-white/90 transition-colors"
+                style={{ backgroundColor: 'var(--wp--preset--color--primary, #ac323a)', color: '#fff', padding: '0.5rem 1.5rem', fontSize: '0.875rem', fontWeight: 600, textDecoration: 'none' }}
               >
                 Get Tickets
               </a>

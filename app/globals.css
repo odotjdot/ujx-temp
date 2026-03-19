@@ -1,10 +1,21 @@
-@import './wp-blocks.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Root padding — WordPress sets these from theme.json but the theme doesn't define them.
-   These control padding on alignfull blocks so content doesn't hit screen edges. */
+/* Hide WPForms honeypot field — normally hidden by WPForms JS which we strip */
+.wpforms-field-hp {
+  position: absolute !important;
+  overflow: hidden !important;
+  height: 1px !important;
+  width: 1px !important;
+  z-index: -1000 !important;
+  padding: 0 !important;
+}
+.wpforms-field-hp input {
+  visibility: hidden;
+}
+
+/* Root padding */
 :root {
   --wp--style--root--padding-left: 1.5rem;
   --wp--style--root--padding-right: 1.5rem;
