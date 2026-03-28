@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://ujamaaexpo.com'),
   title: 'The Ujamaa Expo | March 20, 2026 - Los Angeles',
   description: 'A live activation series built around action, clarity, and collective growth. March 20, 2026 — The Gathering Spot, Los Angeles.',
   openGraph: {
