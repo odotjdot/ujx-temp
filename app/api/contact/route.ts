@@ -38,8 +38,10 @@ export async function POST(req: Request) {
     const emailSubject = `New Contact Form Submission: ${name}`;
     const emailBody = `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`;
     
-    // We don't block the response on SES success/failure
-    sendNotificationEmail(notificationEmail, emailSubject, emailBody).catch(console.error);
+    // Await the email send so serverless functions don't kill the background promise
+    await sendNotificationEmail(notificationEmail, emailSubject, emailBody).catch(err => {
+      console.error('Failed to send notification email, but submission was saved:', err);
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {
