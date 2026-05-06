@@ -2,6 +2,7 @@ import './globals.css'
 import './wp-blocks.css'
 import type { Metadata } from 'next'
 import Image from 'next/image'
+import { getThemeCSS } from '@/lib/theme'
 
 export const metadata: Metadata = {
   title: 'The Ujamaa Expo | March 20, 2026 - Los Angeles',
@@ -27,29 +28,6 @@ export const metadata: Metadata = {
 }
 
 const TICKETS_URL = 'https://www.eventbrite.com/e/the-ujamaa-expo-mingle-plei-tickets-1984949722052?aff=oddtdtcreator'
-
-export async function getThemeCSS(): Promise<string> {
-  try {
-    const res = await fetch(
-      'https://hq.funkmedia.net/ujamaaexpo/wp-json/fm-styles/v1/theme.css',
-      { next: { revalidate: 3600 } }
-    )
-    if (!res.ok) {
-      console.error('[layout] theme.css fetch failed:', res.status)
-      return ''
-    }
-    const raw = await res.text()
-    try {
-      const parsed = JSON.parse(raw)
-      return typeof parsed === 'string' ? parsed : raw
-    } catch {
-      return raw
-    }
-  } catch (err) {
-    console.error('[layout] theme.css fetch threw:', err)
-    return ''
-  }
-}
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const themeCSS = await getThemeCSS()
