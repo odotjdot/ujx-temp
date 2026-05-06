@@ -13,3 +13,4 @@ tsconfig.tsbuildinfo
 # TLS certs (local-only — minted via mkcert per dev, never committed)
 infrastructure/local-dev/certs/
 *.pem
+.claude/
