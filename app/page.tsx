@@ -48,7 +48,14 @@ export default async function HomePage() {
   const page = await getHomePage()
 
   if (!page) {
-    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>Loading...</div>
+    return (
+      <div className="wp-site-blocks is-layout-constrained" style={{ padding: '5rem 1.5rem', textAlign: 'center' }}>
+        <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}>This site is being set up.</h1>
+        <p style={{ color: 'var(--wp--preset--color--bone, #999)', maxWidth: '500px', margin: '0 auto' }}>
+          No front page is configured yet. If you&apos;re the admin, set a static front page in WordPress &gt; Settings &gt; Reading.
+        </p>
+      </div>
+    )
   }
 
   const blocks = (page.editorBlocks || []).filter((b: any) => !b.parentClientId)
@@ -64,7 +71,7 @@ export default async function HomePage() {
         {blocks.map((block: any) => {
           const html = block?.renderedHtml || ''
           if (!html) return null
-          if (html.includes('wpforms')) return null
+          // Strip <script> tags from any WP-rendered block content (WP HTML can contain script blocks)
           const clean = html.replace(/<script[\s\S]*?<\/script>/gi, '')
           return parse(clean)
         })}
