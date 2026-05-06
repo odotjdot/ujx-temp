@@ -1,0 +1,14 @@
+{
+  "name": "gemini-mcp-server",
+  "version": "1.0.0",
+  "description": "Gemini MCP server for FMOSV2 — code review, hater-check, implementation via Gemini Flash/Pro",
+  "type": "module",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "@google/generative-ai": "^0.24.0"
+  }
+}

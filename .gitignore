@@ -1,3 +1,11 @@
 node_modules/
 .next/
 .DS_Store
+
+# Secrets (env files + MCP config with user-specific paths)
+.env
+.env.local
+.env.*.local
+.env.fmos.local
+.mcp.json
+tsconfig.tsbuildinfo
