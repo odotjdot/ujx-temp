@@ -1,0 +1,27 @@
+# UJX Local Dev — Caddy fragment
+#
+# Imported by FMOSV2's Caddyfile via:
+#   import /Users/odotjdot/APPS/*/infrastructure/local-dev/*.caddy
+#
+# Self-contained: paths are absolute, no env vars from FMOSV2 needed.
+#
+# Ports:
+#   :443  ← Caddy HTTPS (handled by FMOSV2's main Caddyfile)
+#   :3010 ← Next.js dev (npm run dev — see scripts/dev-up.sh)
+#
+# Cert: minted on Mac via mkcert, scp'd to certs/ — see README.md.
+
+ujx.test, *.ujx.test {
+	tls /Users/odotjdot/APPS/ujx-temp/infrastructure/local-dev/certs/ujx.test.pem /Users/odotjdot/APPS/ujx-temp/infrastructure/local-dev/certs/ujx.test-key.pem
+
+	reverse_proxy http://127.0.0.1:3010 {
+		header_up Host {host}
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto https
+		transport http {
+			read_timeout  300s
+			write_timeout 300s
+		}
+	}
+}
