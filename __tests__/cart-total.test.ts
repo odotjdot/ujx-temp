@@ -8,11 +8,20 @@ describe('parseCurrencyToCents', () => {
   it('THE BUG FIX: parses amount with thousands comma correctly', async () => {
     const { parseCurrencyToCents } = await import('../lib/cart-total')
     expect(parseCurrencyToCents('$1,234.56')).toBe(123456)
+    expect(parseCurrencyToCents('$10,000.00')).toBe(1000000)
   })
-  it('handles empty/invalid gracefully', async () => {
+  it('handles missing decimals', async () => {
     const { parseCurrencyToCents } = await import('../lib/cart-total')
-    expect(parseCurrencyToCents('')).toBe(0)
-    expect(parseCurrencyToCents(null as any)).toBe(0)
-    expect(parseCurrencyToCents('free')).toBe(0)
+    expect(parseCurrencyToCents('$50')).toBe(5000)
+  })
+  it('throws on garbage instead of silently returning wrong value', async () => {
+    const { parseCurrencyToCents } = await import('../lib/cart-total')
+    expect(() => parseCurrencyToCents('')).toThrow()
+    expect(() => parseCurrencyToCents('abc')).toThrow()
+  })
+  it('formats cents back to display string', async () => {
+    const { formatCents } = await import('../lib/cart-total')
+    expect(formatCents(2499)).toBe('$24.99')
+    expect(formatCents(123456)).toBe('$1,234.56')
   })
 })
