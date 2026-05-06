@@ -14,9 +14,11 @@ export async function POST(req: NextRequest) {
       AuthParameters: { USERNAME: email, PASSWORD: password },
     }))
     const idToken = result.AuthenticationResult?.IdToken
-    if (!idToken) return NextResponse.json({ error: 'auth failed' }, { status: 401 })
+    const accessToken = result.AuthenticationResult?.AccessToken
+    if (!idToken || !accessToken) return NextResponse.json({ error: 'auth failed' }, { status: 401 })
     const res = NextResponse.json({ success: true })
     res.cookies.set('dashboard-id-token', idToken, { httpOnly: true, secure: true, sameSite: 'lax', maxAge: 60*60, path: '/' })
+    res.cookies.set('dashboard-access-token', accessToken, { httpOnly: true, secure: true, sameSite: 'lax', maxAge: 60*60, path: '/' })
     if (result.AuthenticationResult?.RefreshToken) res.cookies.set('dashboard-refresh-token', result.AuthenticationResult.RefreshToken, { httpOnly: true, secure: true, sameSite: 'lax', maxAge: 30*24*60*60, path: '/' })
     return res
   } catch (err: any) {
