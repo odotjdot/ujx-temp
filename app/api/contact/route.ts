@@ -1,41 +1,49 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server';
+import { getDb } from '@/lib/db';
+import { verifyRecaptcha } from '@/lib/recaptcha';
+import { sendNotificationEmail } from '@/lib/email';
 
-const FMBH_API = 'https://api.funkmedia.io'
-
-export async function POST(req: NextRequest) {
-  const body = await req.json()
-  const { name, email, message } = body
-
-  if (!name?.trim() || !email?.trim() || !message?.trim()) {
-    return NextResponse.json({ error: 'All fields are required' }, { status: 400 })
-  }
-
+export async function POST(req: Request) {
   try {
-    const res = await fetch(`${FMBH_API}/forms/system-contact/submit`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Tenant-Id': 'ujamaaexpo',
-        'X-Network-Id': '1',
-      },
-      body: JSON.stringify({
-        submission_data: {
-          name: name.trim(),
-          email: email.trim(),
-          message: message.trim(),
-        },
-      }),
-    })
+    const body = await req.json();
+    const { name, email, message, recaptchaToken } = body;
 
-    const data = await res.json()
-    if (data.success) {
-      return NextResponse.json({ success: true })
-    } else {
-      console.error('Form submit error:', data)
-      return NextResponse.json({ error: data.error?.message || 'Failed to send' }, { status: 500 })
+    if (!name || !email || !message || !recaptchaToken) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
-  } catch (err: any) {
-    console.error('Contact error:', err.message)
-    return NextResponse.json({ error: err.message }, { status: 500 })
+
+    // 1. Verify reCAPTCHA
+    const score = await verifyRecaptcha(recaptchaToken);
+    if (score === null || score < 0.5) {
+      return NextResponse.json({ error: 'reCAPTCHA verification failed' }, { status: 400 });
+    }
+
+    // 2. Write to MySQL
+    const db = getDb();
+    const tenantId = process.env.TENANT_ID || 'ujamaaexpo';
+    const sourceSite = req.headers.get('host') || 'unknown';
+    const ip = req.headers.get('x-forwarded-for') || 'unknown';
+    const userAgent = req.headers.get('user-agent') || 'unknown';
+    const referrer = req.headers.get('referer') || 'unknown';
+
+    await db.execute(
+      `INSERT INTO contact_submissions 
+       (tenant_id, source_site, form_name, name, email, message, ip, user_agent, referrer, recaptcha_score) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [tenantId, sourceSite, 'contact', name, email, message, ip, userAgent, referrer, score]
+    );
+
+    // 3. Send Notification via SES
+    const notificationEmail = process.env.NOTIFICATION_EMAIL || 'info@ujamaaexpo.com';
+    const emailSubject = `New Contact Form Submission: ${name}`;
+    const emailBody = `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`;
+    
+    // We don't block the response on SES success/failure
+    sendNotificationEmail(notificationEmail, emailSubject, emailBody).catch(console.error);
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Contact form error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
