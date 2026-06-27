@@ -1,0 +1,22 @@
+# UJX Local Dev — Caddy fragment TEMPLATE
+#
+# Rendered at runtime by scripts/dev-up.sh: {{PORT}} is replaced with the
+# port `next dev` actually bound to (chosen dynamically by find-free-port.sh).
+# The rendered output lands at /Users/odotjdot/APPS/local-dev/conf.d/ujx.caddy
+# and is removed by dev-down.sh.
+#
+# DO NOT edit the rendered file in conf.d — edits go here.
+
+ujx.test, *.ujx.test {
+	tls /Users/odotjdot/APPS/ujx-temp/infrastructure/local-dev/certs/ujx.test.pem /Users/odotjdot/APPS/ujx-temp/infrastructure/local-dev/certs/ujx.test-key.pem
+
+	reverse_proxy http://127.0.0.1:{{PORT}} {
+		header_up Host {host}
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-Proto https
+		transport http {
+			read_timeout  300s
+			write_timeout 300s
+		}
+	}
+}

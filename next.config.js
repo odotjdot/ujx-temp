@@ -5,5 +5,6 @@ const nextConfig = {
       { protocol: 'https', hostname: 'hq.funkmedia.net' },
     ],
   },
+  allowedDevOrigins: ['ujx.test', '*.ujx.test'],
 }
 module.exports = nextConfig

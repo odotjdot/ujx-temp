@@ -1,36 +1,36 @@
 #!/usr/bin/env bash
-# UJX dev launcher — starts Next.js on 0.0.0.0:3010 and reloads Caddy so
-# https://ujx.test routes to it. Re-runnable; kills any prior instance on 3010.
+# UJX dev launcher — picks a free port at startup, renders the Caddy
+# fragment with that port, starts Next.js, and reloads Caddy. Re-runnable.
 #
-# Caddy and the FMOSV2 Caddyfile are owned by FMOSV2 — this script only
-# touches UJX's own fragment + reloads Caddy after FMOSV2's main config has
-# imported the fragment.
+# The Caddy port-binding lives ONLY in the rendered fragment at
+# /Users/odotjdot/APPS/local-dev/conf.d/ujx.caddy. The template at
+# infrastructure/local-dev/ujx.caddy.template is the source of truth.
 
 set -euo pipefail
+
 # Source nvm so npx is on PATH in non-interactive SSH sessions
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 
-
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-PORT=3010
+APP_SLUG="ujx"
+PORT_BASE=3010
 CERT_DIR="${REPO_ROOT}/infrastructure/local-dev/certs"
-CADDY_ADMIN="http://localhost:2019"
+TEMPLATE="${REPO_ROOT}/infrastructure/local-dev/${APP_SLUG}.caddy.template"
+LOCAL_DEV_ROOT="/Users/odotjdot/APPS/local-dev"
+CONF_D="${LOCAL_DEV_ROOT}/conf.d"
+FIND_PORT="${LOCAL_DEV_ROOT}/bin/find-free-port.sh"
 FMOS_CADDYFILE="/Users/odotjdot/wpserver-local/FM/FMOSV2/infrastructure/local-dev/Caddyfile"
 FMOS_CERT_DIR="/Users/odotjdot/wpserver-local/FM/FMOSV2/infrastructure/local-dev/certs"
+CADDY_ADMIN="http://localhost:2019"
 PID_FILE="${REPO_ROOT}/.dev-pid"
+PORT_FILE="${REPO_ROOT}/.dev-port"
 
 cd "${REPO_ROOT}"
 
-CONF_D="/Users/odotjdot/APPS/local-dev/conf.d"
-
 # ─── Sanity: certs in place ──────────────────────────────────────────────
-# Symlinking ujx.caddy into conf.d BEFORE the cert exists would break the
-# next FMOSV2 Caddy reload (TLS load fails). So we gate the symlink on
-# certs being present.
 if [[ ! -f "${CERT_DIR}/ujx.test.pem" || ! -f "${CERT_DIR}/ujx.test-key.pem" ]]; then
-	# Defensive: remove any stale symlink to avoid breaking other reloads.
-	rm -f "${CONF_D}/ujx.caddy"
+	rm -f "${CONF_D}/${APP_SLUG}.caddy"
 	cat <<EOF >&2
 ❌ Missing TLS certs at ${CERT_DIR}/ujx.test{.pem,-key.pem}.
 
@@ -43,23 +43,35 @@ EOF
 	exit 1
 fi
 
-# ─── Register fragment with Caddy (idempotent symlink) ────────────────────
-mkdir -p "${CONF_D}"
-ln -sfn "${REPO_ROOT}/infrastructure/local-dev/ujx.caddy" "${CONF_D}/ujx.caddy"
+# ─── Sanity: template in place ───────────────────────────────────────────
+if [[ ! -f "${TEMPLATE}" ]]; then
+	echo "❌ Missing template ${TEMPLATE}" >&2
+	exit 1
+fi
 
-# ─── Kill prior dev on PORT ──────────────────────────────────────────────
+# ─── Kill prior dev (use recorded port if we know it) ────────────────────
 if [[ -f "${PID_FILE}" ]] && kill -0 "$(cat "${PID_FILE}")" 2>/dev/null; then
-	echo "→ Killing prior dev (pid $(cat "${PID_FILE}"))"
-	kill "$(cat "${PID_FILE}")" 2>/dev/null || true
-	sleep 1
-fi
-# Also clear anyone else squatting on PORT (e.g. orphaned next-server)
-if PIDS="$(ss -tlnp "( sport = :${PORT} )" 2>/dev/null | awk -F'pid=' 'NR>1 {split($2, a, ","); print a[1]}' | sort -u)"; then
-	for p in ${PIDS}; do
-		echo "→ Killing squatter on :${PORT} (pid ${p})"
-		kill "${p}" 2>/dev/null || true
+	OLD_PID="$(cat "${PID_FILE}")"
+	echo "→ Killing prior dev (pid ${OLD_PID})"
+	kill "${OLD_PID}" 2>/dev/null || true
+	# Give it a moment to release the port
+	for _ in 1 2 3 4 5; do
+		kill -0 "${OLD_PID}" 2>/dev/null || break
+		sleep 1
 	done
+	kill -9 "${OLD_PID}" 2>/dev/null || true
 fi
+# Drop the stale conf.d entry so its old port doesn't linger across restarts
+rm -f "${CONF_D}/${APP_SLUG}.caddy"
+
+# ─── Pick a free port ────────────────────────────────────────────────────
+PORT="$(bash "${FIND_PORT}" "${PORT_BASE}")"
+echo "${PORT}" > "${PORT_FILE}"
+echo "→ Picked port ${PORT}"
+
+# ─── Render Caddy fragment with chosen port ──────────────────────────────
+mkdir -p "${CONF_D}"
+sed "s/{{PORT}}/${PORT}/g" "${TEMPLATE}" > "${CONF_D}/${APP_SLUG}.caddy"
 
 # ─── Start Next.js dev (background) ──────────────────────────────────────
 echo "→ Starting next dev on 0.0.0.0:${PORT}"
@@ -82,7 +94,7 @@ for i in $(seq 1 30); do
 	fi
 done
 
-# ─── Reload Caddy so it picks up the imported ujx.test fragment ──────────
+# ─── Reload Caddy (admin API or sudo fallback) ───────────────────────────
 if curl -fsS "${CADDY_ADMIN}/config/" >/dev/null 2>&1; then
 	echo "→ Reloading Caddy"
 	export FMOS_CERT_DIR
@@ -92,24 +104,25 @@ else
 	echo "⚠️  Caddy admin API unreachable at ${CADDY_ADMIN} — start FMOSV2 dev stack first." >&2
 fi
 
-# ─── Smoke test ──────────────────────────────────────────────────────────
-if curl -fsS -k -H 'Host: ujx.test' https://127.0.0.1/ -o /dev/null; then
+# ─── Smoke test via Caddy ────────────────────────────────────────────────
+if curl -fsS -k --resolve ujx.test:443:127.0.0.1 https://ujx.test/ -o /dev/null; then
 	echo "✓ https://ujx.test → :${PORT} via Caddy reachable from VPS"
 else
-	echo "⚠️  Smoke test failed — Caddy may not have reloaded; check caddy.log" >&2
+	echo "⚠️  Smoke test failed — check ${REPO_ROOT}/.dev.log and caddy.log" >&2
 fi
 
 cat <<EOF
 
 ────────────────────────────────────────────────────────────────
 UJX dev is up:
+  Port:          ${PORT}  (recorded in ${PORT_FILE})
   Local (VPS):   http://127.0.0.1:${PORT}
-  Via Caddy:     https://ujx.test  (from the Mac, after /etc/hosts)
+  Via Caddy:     https://ujx.test  (from your Mac, after /etc/hosts)
 
 To reach it from your Mac, ensure /etc/hosts has:
   100.73.90.42  ujx.test
 
 Logs:  tail -f ${REPO_ROOT}/.dev.log
-Stop:  kill \$(cat ${PID_FILE})
+Stop:  bash ${REPO_ROOT}/scripts/dev-down.sh
 ────────────────────────────────────────────────────────────────
 EOF

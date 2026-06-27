@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "bash scripts/dev-up.sh",
+    "dev:stop": "bash scripts/dev-down.sh",
     "build": "next build",
     "start": "next start",
     "test": "vitest run",
