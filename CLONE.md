@@ -36,9 +36,9 @@ SOURCE_SITE=<domain.com>
 # Point to the new WP backend
 NEXT_PUBLIC_WORDPRESS_URL=https://hq.funkmedia.net/<tenant_id>
 
-# Keep these shared across tenants
-TEMPSITES_DB_NAME=fm_funkmedia
-TEMPSITES_DB_USER=fm_tempsites_writer
+# DB names match lib/db.ts reads (DB_NAME, DB_USER, DB_HOST, DB_PASSWORD)
+DB_NAME=fm_funkmedia
+DB_USER=fm_tempsites_writer
 
 # Optional: customize notification email
 LEADS_NOTIFY_EMAIL=oj@funkmedia.io
