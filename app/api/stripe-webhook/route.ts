@@ -31,14 +31,19 @@ export async function POST(req: NextRequest) {
 
   if (event.type === 'payment_intent.succeeded') {
     const pi = event.data.object as any
-    try {
-      await sendNotificationEmail(
-        process.env.NOTIFICATION_EMAIL ?? 'info@ujamaaexpo.com',
-        `[${tenantId}] Order paid: ${pi.id}`,
-        `Payment Intent ${pi.id} succeeded for ${(pi.amount / 100).toFixed(2)} ${pi.currency.toUpperCase()}.`,
-        `<p>Payment Intent <code>${pi.id}</code> succeeded for ${(pi.amount / 100).toFixed(2)} ${pi.currency.toUpperCase()}.</p>`
-      )
-    } catch (err: any) { console.error('[stripe-webhook] notify failed:', err.message) }
+    const notifyEmail = process.env.NOTIFICATION_EMAIL ?? process.env.LEADS_NOTIFY_EMAIL
+    if (!notifyEmail) {
+      console.error('[stripe-webhook] NOTIFICATION_EMAIL and LEADS_NOTIFY_EMAIL are both unset — payment notification skipped for', pi.id)
+    } else {
+      try {
+        await sendNotificationEmail(
+          notifyEmail,
+          `[${tenantId}] Order paid: ${pi.id}`,
+          `Payment Intent ${pi.id} succeeded for ${(pi.amount / 100).toFixed(2)} ${pi.currency.toUpperCase()}.`,
+          `<p>Payment Intent <code>${pi.id}</code> succeeded for ${(pi.amount / 100).toFixed(2)} ${pi.currency.toUpperCase()}.</p>`
+        )
+      } catch (err: any) { console.error('[stripe-webhook] notify failed:', err.message) }
+    }
   }
   return NextResponse.json({ received: true })
 }

@@ -1,8 +1,9 @@
-const THEME_CSS_URL = 'https://hq.funkmedia.net/ujamaaexpo/wp-json/fm-styles/v1/theme.css'
-
 export async function getThemeCSS(): Promise<string> {
   try {
-    const res = await fetch(THEME_CSS_URL, { next: { revalidate: 3600 } })
+    const base = process.env.NEXT_PUBLIC_WORDPRESS_URL
+    if (!base) throw new Error('NEXT_PUBLIC_WORDPRESS_URL not set')
+    const url = `${base}/wp-json/fm-styles/v1/theme.css`
+    const res = await fetch(url, { next: { revalidate: 3600 } })
     if (!res.ok) {
       console.error('[theme] theme.css fetch failed:', res.status)
       return ''

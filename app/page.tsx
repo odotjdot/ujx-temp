@@ -1,9 +1,13 @@
 import parse from 'html-react-parser'
 
-const WP_GRAPHQL = 'https://hq.funkmedia.net/ujamaaexpo/graphql'
+const ENDPOINT = () => {
+  const base = process.env.NEXT_PUBLIC_WORDPRESS_URL
+  if (!base) throw new Error('NEXT_PUBLIC_WORDPRESS_URL not set')
+  return `${base}/graphql`
+}
 
 async function getHomePage() {
-  const settingsRes = await fetch(WP_GRAPHQL, {
+  const settingsRes = await fetch(ENDPOINT(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -20,7 +24,7 @@ async function getHomePage() {
   const pageId = settings?.data?.allSettings?.readingSettingsPageOnFront
   if (!pageId) return null
 
-  const pageRes = await fetch(WP_GRAPHQL, {
+  const pageRes = await fetch(ENDPOINT(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
