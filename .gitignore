@@ -1,0 +1,23 @@
+node_modules/
+.next/
+.DS_Store
+
+# Secrets (env files + MCP config with user-specific paths)
+.env
+.env.local
+.env.*.local
+.env*.local
+.env.fmos.local
+.env.local.bak.*
+.mcp.json
+tsconfig.tsbuildinfo
+
+# TLS certs (local-only — minted via mkcert per dev, never committed)
+infrastructure/local-dev/certs/
+*.pem
+
+# local-dev runtime artifacts
+.dev.log
+.dev-pid
+.dev-port
+.claude/
